@@ -3,31 +3,12 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Password;
 
 use App\Models\User;
 
 class AuthController extends Controller
 {
-    /**
-     * Login
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function login(Request $request)
-    {
-        $credentials = $request->only('email', 'password');
-
-        if (Auth::attempt($credentials)) {
-            $user = Auth::user();
-            return response()->json(['message' => 'Sesión iniciada correctamente', 'user' => $user]);
-        } else {
-            return response()->json(['error' => 'Credenciales inválidas'], 401);
-        }
-    }
-
     /**
      * Registro
      *
@@ -42,14 +23,35 @@ class AuthController extends Controller
             'password' => 'required|string|min:6',
         ]);
 
+        // Generar un número de 9 dígitos para mobile_number
+        $mobileNumber = strval(mt_rand(100000000, 999999999));
+
         $user = User::create([
             'name' => $request->input('name'),
             'email' => $request->input('email'),
             'password' => bcrypt($request->input('password')),
-            'mobile_number' => $this->generateRandomNumber(),
+            'mobile_number' => $mobileNumber,
         ]);
 
         return response()->json(['message' => 'Usuario registrado correctamente', 'user' => $user]);
+    }
+
+    /**
+     * Login
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function login(Request $request)
+    {
+        $credentials = $request->only('email', 'password');
+
+        if (auth()->attempt($credentials)) {
+            $user = auth()->user();
+            return response()->json(['message' => 'Sesión iniciada correctamente', 'user' => $user]);
+        } else {
+            return response()->json(['error' => 'Credenciales inválidas'], 401);
+        }
     }
 
     /**
@@ -60,7 +62,8 @@ class AuthController extends Controller
      */
     public function logout(Request $request)
     {
-        $request->user()->token()->revoke();
+        auth()->logout();
+
         return response()->json(['message' => 'Sesión cerrada correctamente']);
     }
 
@@ -105,18 +108,4 @@ class AuthController extends Controller
     
         return response()->json(['message' => 'Avatar subido correctamente']);
     }
-    
-    
-    
-
-    /**
-     * Generar número de 9 dígitos aleatorio
-     *
-     * @return int
-     */
-    private function generateRandomNumber()
-    {
-        return mt_rand(100000000, 999999999);
-    }
 }
-
