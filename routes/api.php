@@ -11,6 +11,8 @@ Route::post('/logout', [AuthController::class, 'logout']);
 Route::post('/avatar', [AuthController::class, 'uploadAvatar']);
 Route::post('/agregarcontacto', [ContactoController::class, 'agregarContacto'])->name('contactos.agregar');
 Route::get('/mostarcontacto', [ContactoController::class, 'mostrarContactos']);
+Route::delete('/eliminarcontacto', [ContactoController::class, 'eliminarContacto']);
+
 
 
 use App\Http\Controllers\MensajeController;
