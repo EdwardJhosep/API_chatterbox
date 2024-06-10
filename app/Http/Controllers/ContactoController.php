@@ -29,13 +29,18 @@ class ContactoController extends Controller
             return response()->json(['message' => 'El número actual no existe en la tabla users'], 404);
         }
 
+        // Verificar si el número agregado es el mismo que el número actual
+        if ($request->numeroactual === $request->numeroagregado) {
+            return response()->json(['message' => 'No puedes agregar tu propio número como contacto'], 400);
+        }
+
         // Verificar si el número agregado ya está en la lista de contactos del número actual
         $contactoExistente = Contacto::where('numeroactual', $request->numeroactual)
             ->where('numeroagregado', $request->numeroagregado)
             ->first();
 
         if ($contactoExistente) {
-            return response()->json(['message' => 'El contacto ya existe'], 409);
+            return response()->json(['message' => 'El contacto ya existe en tu lista de contactos'], 409);
         }
 
         // Crear el nuevo contacto
