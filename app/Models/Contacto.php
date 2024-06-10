@@ -12,6 +12,7 @@ class Contacto extends Model
     protected $table = 'contactos'; // Nombre de la tabla en la base de datos
 
     protected $fillable = [
+        'nombre',
         'numeroactual',
         'numeroagregado',
     ];
