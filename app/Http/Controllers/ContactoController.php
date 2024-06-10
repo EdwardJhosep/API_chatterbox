@@ -15,43 +15,46 @@ class ContactoController extends Controller
      * @return \Illuminate\Http\JsonResponse
      */
     public function agregarContacto(Request $request)
-    {
-        // Validar datos
-        $request->validate([
-            'numeroactual' => 'required|string|max:255',
-            'numeroagregado' => 'required|string|max:255',
-        ]);
-    
-        // Verificar si el número agregado existe en la tabla users
-        $usuarioAgregado = User::where('mobile_number', $request->numeroagregado)->first();
-    
-        if (!$usuarioAgregado) {
-            return response()->json(['message' => 'El número agregado no existe en la tabla users'], 404);
-        }
-    
-        // Verificar si el número agregado es el mismo que el número actual
-        if ($request->numeroactual === $request->numeroagregado) {
-            return response()->json(['message' => 'No puedes agregar tu propio número como contacto'], 400);
-        }
-    
-        // Verificar si el número agregado ya está en la lista de contactos del número actual
-        $contactoExistente = Contacto::where('numeroactual', $request->numeroactual)
-            ->where('numeroagregado', $request->numeroagregado)
-            ->first();
-    
-        if ($contactoExistente) {
-            return response()->json(['message' => 'El contacto ya existe en tu lista de contactos'], 409);
-        }
-    
-        // Crear el nuevo contacto
-        Contacto::create([
-            'numeroactual' => $request->numeroactual,
-            'numeroagregado' => $request->numeroagregado,
-        ]);
-    
-        // Retornar una respuesta JSON
-        return response()->json(['message' => 'Contacto agregado correctamente'], 201);
+{
+    // Validar datos
+    $request->validate([
+        'numeroactual' => 'required|string|max:255',
+        'nombre' => 'required|string|max:255',
+        'numeroagregado' => 'required|string|max:255',
+    ]);
+
+    // Verificar si el número agregado existe en la tabla users
+    $usuarioAgregado = User::where('mobile_number', $request->numeroagregado)->first();
+
+    if (!$usuarioAgregado) {
+        return response()->json(['message' => 'El número agregado no existe en la tabla users'], 404);
     }
+
+    // Verificar si el número agregado es el mismo que el número actual
+    if ($request->numeroactual === $request->numeroagregado) {
+        return response()->json(['message' => 'No puedes agregar tu propio número como contacto'], 400);
+    }
+
+    // Verificar si el número agregado ya está en la lista de contactos del número actual
+    $contactoExistente = Contacto::where('numeroactual', $request->numeroactual)
+        ->where('numeroagregado', $request->numeroagregado)
+        ->first();
+
+    if ($contactoExistente) {
+        return response()->json(['message' => 'El contacto ya existe en tu lista de contactos'], 409);
+    }
+
+    // Crear el nuevo contacto
+    Contacto::create([
+        'numeroactual' => $request->numeroactual,
+        'nombre' => $request->nombre,
+        'numeroagregado' => $request->numeroagregado,
+    ]);
+
+    // Retornar una respuesta JSON
+    return response()->json(['message' => 'Contacto agregado correctamente'], 201);
+}
+
     
 
     /**
