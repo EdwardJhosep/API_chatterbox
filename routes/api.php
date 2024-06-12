@@ -6,6 +6,7 @@ use App\Http\Controllers\ContactoController;
 
 
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/mostrarAvatar', [AuthController::class, 'mostrarAvatar']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/logout', [AuthController::class, 'logout']);
 Route::post('/avatar', [AuthController::class, 'uploadAvatar']);

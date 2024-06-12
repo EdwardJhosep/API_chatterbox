@@ -108,4 +108,19 @@ class AuthController extends Controller
     
         return response()->json(['message' => 'Avatar subido correctamente']);
     }
+    public function mostrarAvatar(Request $request)
+    {
+        $request->validate([
+            'id' => 'required|exists:users,id',
+        ]);
+
+        $user = User::findOrFail($request->input('id'));
+
+        if ($user->avatar) {
+            $avatarUrl = url('perfil/' . $user->avatar);
+            return response()->json(['avatar' => $avatarUrl]);
+        } else {
+            return response()->json(['message' => 'Usuario no tiene avatar']);
+        }
+    }
 }
