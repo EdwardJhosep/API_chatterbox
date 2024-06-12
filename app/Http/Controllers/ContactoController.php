@@ -60,8 +60,7 @@ class ContactoController extends Controller
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\JsonResponse
-     */
-    public function mostrarContactos(Request $request)
+     */public function mostrarContactos(Request $request)
 {
     // Validar datos
     $request->validate([
@@ -93,6 +92,7 @@ class ContactoController extends Controller
     // Retornar una respuesta JSON con los contactos
     return response()->json(['contactos' => $contactos], 200);
 }
+
 
     /**
      * Elimina un contacto específico.
