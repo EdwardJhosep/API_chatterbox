@@ -75,8 +75,12 @@ class ContactoController extends Controller
             return response()->json(['message' => 'El número actual no existe en la tabla users'], 404);
         }
 
-        // Obtener todos los contactos del número actual
-        $contactos = Contacto::where('numeroactual', $request->numeroactual)->get();
+        // Obtener todos los contactos del número actual, incluyendo el avatar del usuario agregado
+        $contactos = Contacto::where('numeroactual', $request->numeroactual)
+            ->with(['user' => function ($query) {
+                $query->select('mobile_number', 'avatar');
+            }])
+            ->get();
 
         // Retornar una respuesta JSON con los contactos
         return response()->json(['contactos' => $contactos], 200);

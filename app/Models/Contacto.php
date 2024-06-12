@@ -17,6 +17,9 @@ class Contacto extends Model
         'numeroagregado',
     ];
 
-    // No necesitamos definir las marcas de tiempo en este modelo, ya que Eloquent asume que existen
-    // created_at y updated_at en la tabla
+    // Relación con el modelo User
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'numeroagregado', 'mobile_number');
+    }
 }

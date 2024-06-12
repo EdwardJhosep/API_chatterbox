@@ -7,6 +7,7 @@ use App\Models\Estado;
 use App\Models\Contacto;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Exception;
+use Carbon\Carbon;
 
 class EstadoController extends Controller
 {
@@ -60,76 +61,40 @@ class EstadoController extends Controller
         }
     }
 
-    public function eliminarEstado($id)
+    public function mostrarEstados(Request $request)
     {
+        $request->validate([
+            'numero' => 'required|string|max:255',
+        ], [
+            'numero.required' => 'El número es obligatorio',
+        ]);
+
         try {
-            $estado = Estado::findOrFail($id);
+            // Buscar contactos donde el número actual o agregado coincida con el número proporcionado
+            $contactos = Contacto::where('numeroactual', $request->numero)
+                ->orWhere('numeroagregado', $request->numero)
+                ->get();
 
-            // Eliminar archivo de foto
-            if ($estado->foto_ruta) {
-                $fotoPath = public_path($estado->foto_ruta);
-                if (file_exists($fotoPath)) {
-                    unlink($fotoPath); // Elimina el archivo físicamente
-                }
-            }
+            // Obtener los números de los contactos encontrados
+            $numerosContactos = $contactos->pluck('numeroactual');
 
-            // Eliminar archivo de video
-            if ($estado->video_ruta) {
-                $videoPath = public_path($estado->video_ruta);
-                if (file_exists($videoPath)) {
-                    unlink($videoPath); // Elimina el archivo físicamente
-                }
-            }
+            // Obtener la fecha límite de 24 horas atrás
+            $fechaLimite = Carbon::now()->subHours(24);
 
-            $estado->delete();
+            // Buscar estados relacionados con los contactos encontrados
+            $estados = Estado::whereIn('numero_actual', $numerosContactos)
+                ->where('created_at', '>=', $fechaLimite)
+                ->get();
 
-            return response()->json(['message' => 'Estado eliminado correctamente'], 200);
-        } catch (ModelNotFoundException $e) {
-            return response()->json(['message' => 'Estado no encontrado'], 404);
-        } catch (Exception $e) {
-            return response()->json(['message' => 'Error al eliminar el estado: ' . $e->getMessage()], 500);
-        }
-    }
+            // Eliminar estados más antiguos de 24 horas
+            Estado::where('numero_actual', $numerosContactos)
+                ->where('created_at', '<', $fechaLimite)
+                ->delete();
 
-    public function likeEstado($id)
-    {
-        try {
-            $estado = Estado::findOrFail($id);
-            $estado->increment('likes');
-            return response()->json(['message' => 'Estado likeado correctamente', 'likes' => $estado->likes], 200);
-        } catch (ModelNotFoundException $e) {
-            return response()->json(['message' => 'Estado no encontrado'], 404);
-        } catch (Exception $e) {
-            return response()->json(['message' => 'Error al likear el estado: ' . $e->getMessage()], 500);
-        }
-    }
+            return response()->json(['estados' => $estados], 200);
 
-    public function verEstado($id, Request $request)
-    {
-        try {
-            $estado = Estado::findOrFail($id);
-
-            $numeroActual = $request->input('numero_actual');
-            
-            // Verificar si el usuario tiene permiso para ver el estado
-            $contacto = Contacto::where(function($query) use ($numeroActual, $estado) {
-                $query->where('numeroactual', $numeroActual)
-                      ->where('numeroagregado', $estado->numero_actual);
-            })->orWhere(function($query) use ($numeroActual, $estado) {
-                $query->where('numeroactual', $estado->numero_actual)
-                      ->where('numeroagregado', $numeroActual);
-            })->first();
-
-            if (!$contacto) {
-                return response()->json(['message' => 'No tienes permiso para ver este estado'], 403);
-            }
-
-            $estado->increment('vistas');
-            return response()->json(['message' => 'Estado visto correctamente', 'vistas' => $estado->vistas], 200);
-        } catch (ModelNotFoundException $e) {
-            return response()->json(['message' => 'Estado no encontrado'], 404);
-        } catch (Exception $e) {
-            return response()->json(['message' => 'Error al ver el estado: ' . $e->getMessage()], 500);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error al mostrar los estados: ' . $e->getMessage()], 500);
         }
     }
 }

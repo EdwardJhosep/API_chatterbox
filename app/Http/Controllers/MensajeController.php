@@ -68,7 +68,49 @@ class MensajeController extends Controller
             return response()->json(['message' => 'Error al enviar el mensaje: ' . $e->getMessage()], 500);
         }
     }
+    public function mostrarMensajes(Request $request)
+    {
+        // Validar los parámetros de la solicitud
+        $request->validate([
+            'numero_origen' => 'required|string|max:255',
+            'numero_destino' => 'required|string|max:255',
+        ]);
+
+        try {
+            $numero_origen = $request->input('numero_origen');
+            $numero_destino = $request->input('numero_destino');
+
+            // Obtener los mensajes filtrados
+            $mensajes = Mensaje::where('numero_origen', $numero_origen)
+                ->where('numero_destino', $numero_destino)
+                ->get();
+
+            // Si no se encuentran mensajes, se devuelve un mensaje de error
+            if ($mensajes->isEmpty()) {
+                return response()->json(['message' => 'No se encontraron mensajes para los números dados'], 404);
+            }
+
+            // Transformar la respuesta para incluir la URL completa de la foto, si existe
+            $mensajes = $mensajes->map(function ($mensaje) {
+                $mensajeData = [
+                    'mensaje' => $mensaje->mensaje,
+                ];
+
+                if ($mensaje->foto_ruta) {
+                    $mensajeData['foto_ruta'] = asset($mensaje->foto_ruta);
+                }
+
+                return $mensajeData;
+            });
+
+            return response()->json(['mensajes' => $mensajes], 200);
+
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error al mostrar los mensajes: ' . $e->getMessage()], 500);
+        }
+    }
     
+
 
     public function eliminarMensaje($id)
     {
@@ -97,4 +139,5 @@ class MensajeController extends Controller
             return response()->json(['message' => 'Error al eliminar el mensaje: ' . $e->getMessage()], 500);
         }
     }
+    
 }
