@@ -62,29 +62,37 @@ class ContactoController extends Controller
      * @return \Illuminate\Http\JsonResponse
      */
     public function mostrarContactos(Request $request)
-    {
-        // Validar datos
-        $request->validate([
-            'numeroactual' => 'required|string|max:255',
-        ]);
+{
+    // Validar datos
+    $request->validate([
+        'numeroactual' => 'required|string|max:255',
+    ]);
 
-        // Verificar si el número actual existe en la tabla users
-        $usuario = User::where('mobile_number', $request->numeroactual)->first();
+    // Verificar si el número actual existe en la tabla users
+    $usuario = User::where('mobile_number', $request->numeroactual)->first();
 
-        if (!$usuario) {
-            return response()->json(['message' => 'El número actual no existe en la tabla users'], 404);
-        }
-
-        // Obtener todos los contactos del número actual, incluyendo el avatar del usuario agregado
-        $contactos = Contacto::where('numeroactual', $request->numeroactual)
-            ->with(['user' => function ($query) {
-                $query->select('mobile_number', 'avatar');
-            }])
-            ->get();
-
-        // Retornar una respuesta JSON con los contactos
-        return response()->json(['contactos' => $contactos], 200);
+    if (!$usuario) {
+        return response()->json(['message' => 'El número actual no existe en la tabla users'], 404);
     }
+
+    // Obtener todos los contactos del número actual, incluyendo el avatar del usuario agregado
+    $contactos = Contacto::where('numeroactual', $request->numeroactual)
+        ->with(['user' => function ($query) {
+            $query->select('mobile_number', 'avatar');
+        }])
+        ->get();
+
+    // Formatear los contactos para incluir la URL completa del avatar
+    $contactos = $contactos->map(function ($contacto) {
+        if ($contacto->user && $contacto->user->avatar) {
+            $contacto->user->avatar = url('perfil/' . $contacto->user->avatar);
+        }
+        return $contacto;
+    });
+
+    // Retornar una respuesta JSON con los contactos
+    return response()->json(['contactos' => $contactos], 200);
+}
 
     /**
      * Elimina un contacto específico.
